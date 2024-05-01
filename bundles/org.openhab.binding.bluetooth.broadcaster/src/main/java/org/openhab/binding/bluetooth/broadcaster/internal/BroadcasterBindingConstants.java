@@ -13,6 +13,7 @@
 package org.openhab.binding.bluetooth.broadcaster.internal;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.bluetooth.BluetoothBindingConstants;
 import org.openhab.core.thing.ThingTypeUID;
 
 /**
@@ -24,11 +25,26 @@ import org.openhab.core.thing.ThingTypeUID;
 @NonNullByDefault
 public class BroadcasterBindingConstants {
 
-    private static final String BINDING_ID = "bluetooth.broadcaster";
-
     // List of all Thing Type UIDs
-    public static final ThingTypeUID THING_TYPE_SAMPLE = new ThingTypeUID(BINDING_ID, "sample");
+    public static final ThingTypeUID THING_TYPE_BROADCASTER = new ThingTypeUID(BluetoothBindingConstants.BINDING_ID,
+            "broadcaster");
 
     // List of all Channel ids
-    public static final String CHANNEL_1 = "channel1";
+    public static final String CHANNEL_TYPE_INTERVAL = "interval";
+    public static final String CHANNEL_TYPE_NUMBER = "number";
+    public static final String CHANNEL_TYPE_RAW = "raw";
+
+    public static final String PARAMETER_DATA_UUID = "uuid";
+    public static final String PARAMETER_BROADCASTER_DATA_TYPE = "broadcasterDataType";
+    public static final String PARAMETER_DATA_BEGIN_INDEX = "dataBeginIndex";
+    public static final String PARAMETER_DATA_LENGTH = "dataLength";
+    public static final String PARAMETER_MULTIPLICATOR = "multiplicator";
+    public static final String PARAMETER_MANUFACTURER_DATA = "ManufacturerData";
+    public static final String PARAMETER_SERVICE_DATA = "ServiceData";
+
+    // List of all Property IDs
+    // public static final String PROPERTY_BINDING_VERSION = "bindingVersion";
+    public static final String PROPERTY_ADVERTISING_INTERVAL = "advertisingInterval";
+    // public static final String PROPERTY_SERVICE_UUID = "serviceUUID";
+
 }

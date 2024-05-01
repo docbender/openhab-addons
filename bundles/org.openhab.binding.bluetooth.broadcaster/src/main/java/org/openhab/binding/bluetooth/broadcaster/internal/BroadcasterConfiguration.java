@@ -21,11 +21,6 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
  */
 @NonNullByDefault
 public class BroadcasterConfiguration {
-
-    /**
-     * Sample configuration parameters. Replace with your own.
-     */
-    public String hostname = "";
-    public String password = "";
-    public int refreshInterval = 600;
+    public String address = "";
+    public boolean autoChannelCreation = false;
 }

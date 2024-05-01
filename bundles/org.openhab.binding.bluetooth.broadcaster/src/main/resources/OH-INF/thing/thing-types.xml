@@ -1,48 +1,111 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<thing:thing-descriptions bindingId="bluetooth.broadcaster"
+<thing:thing-descriptions bindingId="bluetooth"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-	<!-- Sample Thing Type -->
-	<thing-type id="sample">
-		<!-- Comment this in for Things which need a Bridge to function.
-			<supported-bridge-type-refs>
-			<bridge-type-ref id="bluetooth.broadcasterBridge" />
-			</supported-bridge-type-refs>
-		-->
+	<thing-type id="broadcaster" extensible="number,raw">        
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="roaming"/>
+			<bridge-type-ref id="bluegiga"/>
+			<bridge-type-ref id="bluez"/>
+		</supported-bridge-type-refs>    
 
-		<label>bluetooth.broadcaster Binding Thing</label>
-		<description>Sample thing for bluetooth.broadcaster Binding</description>
+		<label>Broadcaster</label>
+		<description>Bluetooth Broadcaster</description>
 
 		<channels>
-			<channel id="channel1" typeId="sample-channel"/>
+         <channel id="rssi" typeId="rssi"/>  
+			<channel id="interval" typeId="advertise-interval"/>
 		</channels>
-
+		<properties>
+         <property name="advertisingInterval">-</property>
+      </properties>
+      
 		<config-description>
-			<parameter name="hostname" type="text" required="true">
-				<context>network-address</context>
-				<label>Hostname</label>
-				<description>Hostname or IP address of the device</description>
-			</parameter>
-			<parameter name="password" type="text" required="true">
-				<context>password</context>
-				<label>Password</label>
-				<description>Password to access the device</description>
-			</parameter>
-			<parameter name="refreshInterval" type="integer" unit="s" min="1">
-				<label>Refresh Interval</label>
-				<description>Interval the device is polled in sec.</description>
-				<default>600</default>
-				<advanced>true</advanced>
-			</parameter>
+			<parameter name="address" type="text" required="true">
+				<label>Address</label>
+				<description>Bluetooth address in XX:XX:XX:XX:XX:XX format</description>
+            <context>network-address</context>
+			</parameter> 
+            <parameter name="autoChannelCreation" type="boolean">
+                <label>Automatic channel creation</label>
+                <description>Enable automatic channnel creation from received service and manufacturer data</description>
+                <default>false</default>
+                <advanced>true</advanced>
+            </parameter>  			
 		</config-description>
 	</thing-type>
 
-	<!-- Sample Channel Type -->
-	<channel-type id="sample-channel">
-		<item-type>Number:Temperature</item-type>
-		<label>Example Temperature</label><!-- Use uppercase words, except prepositions. 2-3 words, max 25 chars -->
-		<description>Sample channel for bluetooth.broadcaster Binding</description>
+   <channel-type id="advertise-interval">
+      <item-type>Number</item-type>
+      <label>Advertising Interval</label>
+      <description>Advertising interval</description>
+      <state readOnly="true"/>
+   </channel-type>
+   <channel-type id="number">
+		<item-type>Number</item-type>
+		<label>Numeric Data</label>
+		<description>Numeric data</description>
+		<state readOnly="true"/>
+		<config-description>
+            <parameter name="broadcasterDataType" type="text" pattern="^(ManufacturerData)|(ServiceData)$" required="true">
+                <label>Broadcaster data type</label>
+                <description>Which data from the broadcaster should be taken.</description>
+                <options>
+                    <option value="ManufacturerData">Manufacturer data</option>
+                    <option value="ServiceData">Service data</option>
+                </options>
+            </parameter>             
+			<parameter name="uuid" type="text">
+				<label>Service UUID</label>
+				<description>Service UUID</description>
+			</parameter>
+			<parameter name="dataBeginIndex" type="integer">
+                <label>Data begin</label>
+                <description>Data begin index</description>
+                <default>0</default> 
+            </parameter>
+            <parameter name="dataLength" type="integer">
+                <label>Data length</label>
+                <description>Data length</description>
+                <default>2</default>
+            </parameter>
+            <parameter name="multiplicator" type="decimal">
+                <label>Multiplicator</label>
+                <description>Used for data conversion</description>
+                <default>1</default>
+            </parameter>     
+		</config-description>        
 	</channel-type>
+	<channel-type id="raw">
+		<item-type>String</item-type>
+		<label>Bluetooth Raw Data</label>
+		<description>The raw data</description>
+      <state readOnly="true"/> 
+        <config-description>
+            <parameter name="broadcasterDataType" type="text" pattern="^(ManufacturerData)|(ServiceData)$" required="true">
+                <label>Broadcaster data type</label>
+                <description>Which data from the broadcaster should be taken.</description>
+                <options>
+                    <option value="ManufacturerData">Manufacturer data</option>
+                    <option value="ServiceData">Service data</option>
+                </options>
+            </parameter>             
+            <parameter name="uuid" type="text">
+                <label>Service UUID</label>
+                <description>Service UUID</description>
+            </parameter>
+            <parameter name="dataBeginIndex" type="integer">
+                <label>Data begin</label>
+                <description>Data begin index</description>
+                <default>0</default> 
+            </parameter>
+            <parameter name="dataLength" type="integer">
+                <label>Data length</label>
+                <description>Data length</description>
+                <default>2</default>
+            </parameter>            
+        </config-description>             
+	</channel-type>   
 </thing:thing-descriptions>

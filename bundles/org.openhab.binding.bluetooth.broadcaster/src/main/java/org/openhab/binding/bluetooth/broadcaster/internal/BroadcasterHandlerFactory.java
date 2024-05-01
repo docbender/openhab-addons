@@ -12,8 +12,6 @@
  */
 package org.openhab.binding.bluetooth.broadcaster.internal;
 
-import static org.openhab.binding.bluetooth.broadcaster.internal.BroadcasterBindingConstants.*;
-
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -34,8 +32,8 @@ import org.osgi.service.component.annotations.Component;
 @NonNullByDefault
 @Component(configurationPid = "binding.bluetooth.broadcaster", service = ThingHandlerFactory.class)
 public class BroadcasterHandlerFactory extends BaseThingHandlerFactory {
-
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_SAMPLE);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set
+            .of(BroadcasterBindingConstants.THING_TYPE_BROADCASTER);
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -46,7 +44,7 @@ public class BroadcasterHandlerFactory extends BaseThingHandlerFactory {
     protected @Nullable ThingHandler createHandler(Thing thing) {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
-        if (THING_TYPE_SAMPLE.equals(thingTypeUID)) {
+        if (thingTypeUID.equals(BroadcasterBindingConstants.THING_TYPE_BROADCASTER)) {
             return new BroadcasterHandler(thing);
         }
 
