@@ -31,11 +31,12 @@ public class BroadcasterBindingConstants {
 
     // List of all Channel ids
     public static final String CHANNEL_TYPE_INTERVAL = "interval";
-    public static final String CHANNEL_TYPE_NUMBER = "number";
-    public static final String CHANNEL_TYPE_RAW = "raw";
+    public static final String CHANNEL_TYPE_MANUFACTURER_NUMBER = "manufacturer-number";
+    public static final String CHANNEL_TYPE_MANUFACTURER_RAW = "manufacturer-raw";
+    public static final String CHANNEL_TYPE_SERVICE_NUMBER = "service-number";
+    public static final String CHANNEL_TYPE_SERVICE_RAW = "service-raw";
 
     public static final String PARAMETER_DATA_UUID = "uuid";
-    public static final String PARAMETER_BROADCASTER_DATA_TYPE = "broadcasterDataType";
     public static final String PARAMETER_DATA_BEGIN_INDEX = "dataBeginIndex";
     public static final String PARAMETER_DATA_LENGTH = "dataLength";
     public static final String PARAMETER_MULTIPLICATOR = "multiplicator";

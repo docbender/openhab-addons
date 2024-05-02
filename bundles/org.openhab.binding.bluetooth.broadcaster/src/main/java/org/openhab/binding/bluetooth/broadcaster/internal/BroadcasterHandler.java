@@ -30,10 +30,6 @@ import org.openhab.binding.bluetooth.BeaconBluetoothHandler;
 import org.openhab.binding.bluetooth.BluetoothBindingConstants;
 import org.openhab.binding.bluetooth.BluetoothCharacteristic;
 import org.openhab.binding.bluetooth.notification.BluetoothScanNotification;
-import org.openhab.bluetooth.gattparser.BluetoothGattParser;
-import org.openhab.bluetooth.gattparser.BluetoothGattParserFactory;
-import org.openhab.bluetooth.gattparser.spec.Characteristic;
-import org.openhab.bluetooth.gattparser.spec.Field;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
@@ -66,7 +62,7 @@ public class BroadcasterHandler extends BeaconBluetoothHandler {
     private final AtomicBoolean receivedStatus = new AtomicBoolean();
     private @NonNullByDefault({}) ScheduledFuture<?> heartbeatFuture;
     private static final int HEARTBEAT_TIMEOUT_MINUTES = 1;
-    private final BluetoothGattParser gattParser = BluetoothGattParserFactory.getDefault();
+    // private final BluetoothGattParser gattParser = BluetoothGattParserFactory.getDefault();
 
     public BroadcasterHandler(Thing thing) {
         super(thing);
@@ -143,12 +139,52 @@ public class BroadcasterHandler extends BeaconBluetoothHandler {
             logger.debug("  RSSI={}", scanNotification.getRssi());
             logger.debug("  Mandata={}", scanNotification.getManufacturerData());
             if (scanNotification.getManufacturerData().length != 0) {
-                if (config.autoChannelCreation) {
+                // assign manufacturer data
+                byte[] data = scanNotification.getManufacturerData();
+
+                for (var channel : getThing().getChannels()) {
+                    ChannelTypeUID channelType = channel.getChannelTypeUID();
+                    if (channelType == null) {
+                        continue;
+                    }
+                    // looking for service channel
+                    if (!channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_MANUFACTURER_NUMBER)
+                            && !channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_MANUFACTURER_RAW)) {
+                        continue;
+                    }
+                    // get channel properties
+                    var properties = channel.getConfiguration().getProperties();
+                    // retrieve properties values
+                    var index = properties.get(BroadcasterBindingConstants.PARAMETER_DATA_BEGIN_INDEX);
+                    var datalength = properties.get(BroadcasterBindingConstants.PARAMETER_DATA_LENGTH);
+                    var multiplicator = properties.get(BroadcasterBindingConstants.PARAMETER_MULTIPLICATOR);
+                    int indexInt = (index == null) ? 0 : ((BigDecimal) index).intValue();
+                    int lengthInt = (datalength == null) ? 2 : ((BigDecimal) datalength).intValue();
+                    float multiplicatorFloat = (multiplicator == null) ? 1.0f
+                            : ((BigDecimal) multiplicator).floatValue();
+                    // get data for number configured channel
+                    if (channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_SERVICE_NUMBER)) {
+                        if (lengthInt != 1 && lengthInt != 2 && lengthInt != 4 && lengthInt != 8) {
+                            logger.warn("Channel {} has set unsupported data length to {}", channel.getUID().getId(),
+                                    lengthInt);
+                            continue;
+                        }
+                        DecimalType value = getDecimalValue(data, indexInt, lengthInt, multiplicatorFloat);
+                        logger.debug("      Channel {} updated by value {}", channel.getUID().getId(), value);
+                        updateState(channel.getUID(), value);
+                        // get raw data for configured channel
+                    } else if (channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_SERVICE_RAW)) {
+                        StringType value = getRawValue(data, indexInt, lengthInt);
+                        logger.debug("      Channel {} updated by value {}", channel.getUID().getId(), value);
+                        updateState(channel.getUID(), value);
+                    }
+                }
+                if (config != null && config.autoChannelCreation) {
                     ChannelUID channelUID = new ChannelUID(getThing().getUID(), "manufacturer-data");
                     ThingBuilder builder = editThing();
                     if (getThing().getChannel(channelUID) == null) {
                         ChannelTypeUID channelTypeUID = new ChannelTypeUID(BluetoothBindingConstants.BINDING_ID,
-                                BroadcasterBindingConstants.CHANNEL_TYPE_RAW);
+                                BroadcasterBindingConstants.CHANNEL_TYPE_MANUFACTURER_RAW);
                         var channel = ChannelBuilder.create(channelUID).withType(channelTypeUID).build();
                         builder.withChannel(channel);
                         updateThing(builder.build());
@@ -174,104 +210,110 @@ public class BroadcasterHandler extends BeaconBluetoothHandler {
                     uuid = uuid.substring(0, 18);
                 }
                 for (var channel : getThing().getChannels()) {
-                    var type = channel.getConfiguration().getProperties()
-                            .get(BroadcasterBindingConstants.PARAMETER_BROADCASTER_DATA_TYPE);
-
-                    if (type == null || !type.toString().equals("ServiceData")) {
-                        continue;
-                    }
-                    var channelUuid = channel.getConfiguration().getProperties()
-                            .get(BroadcasterBindingConstants.PARAMETER_DATA_UUID);
-                    if (!channelUuid.toString().equals(uuid)) {
-                        continue;
-                    }
                     ChannelTypeUID channelType = channel.getChannelTypeUID();
                     if (channelType == null) {
                         continue;
                     }
-                    var index = channel.getConfiguration().getProperties()
-                            .get(BroadcasterBindingConstants.PARAMETER_DATA_BEGIN_INDEX);
-                    var datalength = channel.getConfiguration().getProperties()
-                            .get(BroadcasterBindingConstants.PARAMETER_DATA_LENGTH);
-                    var multiplicator = channel.getConfiguration().getProperties()
-                            .get(BroadcasterBindingConstants.PARAMETER_MULTIPLICATOR);
+                    // looking for service channel
+                    if (!channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_SERVICE_NUMBER)
+                            && !channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_SERVICE_RAW)) {
+                        continue;
+                    }
+                    // get channel properties
+                    var properties = channel.getConfiguration().getProperties();
+                    // get UUID property
+                    var channelUuid = properties.get(BroadcasterBindingConstants.PARAMETER_DATA_UUID);
+                    // looking for channel with advertised UUID
+                    if (!channelUuid.toString().equals(uuid)) {
+                        continue;
+                    }
+                    // retrieve rest of properties
+                    var index = properties.get(BroadcasterBindingConstants.PARAMETER_DATA_BEGIN_INDEX);
+                    var datalength = properties.get(BroadcasterBindingConstants.PARAMETER_DATA_LENGTH);
+                    var multiplicator = properties.get(BroadcasterBindingConstants.PARAMETER_MULTIPLICATOR);
                     int indexInt = (index == null) ? 0 : ((BigDecimal) index).intValue();
                     int lengthInt = (datalength == null) ? 2 : ((BigDecimal) datalength).intValue();
                     float multiplicatorFloat = (multiplicator == null) ? 1.0f
                             : ((BigDecimal) multiplicator).floatValue();
-
-                    if (channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_NUMBER)) {
-                        long value;
-                        if (lengthInt == 1) {
-                            value = ByteBuffer.wrap(data).get(indexInt);
-                        } else if (lengthInt == 2) {
-                            value = ByteBuffer.wrap(data).getShort(indexInt);
-                        } else if (lengthInt == 4) {
-                            value = ByteBuffer.wrap(data).getInt(indexInt);
-                        } else if (lengthInt == 8) {
-                            value = ByteBuffer.wrap(data).getLong(indexInt);
-                        } else {
-                            logger.warn("Channel {} has set unsupported data length to {}", channel.getLabel(),
+                    // get data for number configured channel
+                    if (channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_SERVICE_NUMBER)) {
+                        if (lengthInt != 1 && lengthInt != 2 && lengthInt != 4 && lengthInt != 8) {
+                            logger.warn("Channel {} has set unsupported data length to {}", channel.getUID().getId(),
                                     lengthInt);
                             continue;
                         }
-                        DecimalType decimalValue;
-                        if (multiplicatorFloat != 1.0f) {
-                            decimalValue = new DecimalType(value * multiplicatorFloat);
-                        } else {
-                            decimalValue = new DecimalType(value);
-                        }
-                        logger.debug("      Configured channel data updated by value {}", decimalValue);
-                        updateState(channel.getUID(), decimalValue);
-                    } else if (channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_RAW)) {
-                        int indexTo = data.length;
-                        if (lengthInt > 0) {
-                            indexTo = indexInt + lengthInt;
-                        }
-                        StringType value = new StringType(
-                                HexUtils.bytesToHex(Arrays.copyOfRange(data, indexInt, indexTo)));
-
-                        logger.debug("      Configured channel data updated by value {}", value);
+                        DecimalType value = getDecimalValue(data, indexInt, lengthInt, multiplicatorFloat);
+                        logger.debug("      Channel {} updated by value {}", channel.getUID().getId(), value);
+                        updateState(channel.getUID(), value);
+                        // get raw data for configured channel
+                    } else if (channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_SERVICE_RAW)) {
+                        StringType value = getRawValue(data, indexInt, lengthInt);
+                        logger.debug("      Channel {} updated by value {}", channel.getUID().getId(), value);
                         updateState(channel.getUID(), value);
                     }
-
-                    // updateState(channel.getUID(), new QuantityType<>(value, ));
                 }
-
-                if (config.autoChannelCreation) {
+                // create channel if creation is enabled
+                if (config != null && config.autoChannelCreation) {
                     ChannelUID channelUID = new ChannelUID(getThing().getUID(), "service-".concat(uuid));
-                    Characteristic gattChar = gattParser.getCharacteristic(uuid);
-                    if (gattChar != null) {
-                        java.util.List<Field> fields = gattParser.getFields(uuid);
-                        logger.debug("      Char={}", gattChar.toString());
-                        logger.debug("      Fields total {}", fields.size());
-                    } else {
-                        logger.debug("      No known fields");
+                    // Characteristic gattChar = gattParser.getCharacteristic(uuid);
+                    // if (gattChar != null) {
+                    // java.util.List<Field> fields = gattParser.getFields(uuid);
+                    // logger.debug(" Char={}", gattChar.toString());
+                    // logger.debug(" Fields total {}", fields.size());
+                    // } else {
+                    // logger.debug(" No known fields");
 
-                        ThingBuilder builder = editThing();
-                        logger.debug("      Looking for {}", "service-".concat(uuid));
-                        logger.debug("      channelUID={}", channelUID.toString());
-                        if (getThing().getChannel(channelUID) == null) {
-                            logger.debug("      UUID not found. Adding one...");
-                            ChannelTypeUID channelTypeUID = new ChannelTypeUID(BluetoothBindingConstants.BINDING_ID,
-                                    BroadcasterBindingConstants.CHANNEL_TYPE_RAW);
-                            Map<String, String> properties = new HashMap<>();
-                            properties.put(BroadcasterBindingConstants.PARAMETER_DATA_UUID, uuid);
-                            var channel = ChannelBuilder.create(channelUID).withType(channelTypeUID)
-                                    .withProperties(properties).build();
-                            // changed = true;
-                            builder.withChannel(channel);
-                            updateThing(builder.build());
-                            logger.debug("      Channel added");
-                        } else {
-                            logger.debug("      Channel exists");
-                        }
+                    ThingBuilder builder = editThing();
+                    logger.debug("      Looking for {}", "service-".concat(uuid));
+                    logger.debug("      channelUID={}", channelUID.toString());
+                    if (getThing().getChannel(channelUID) == null) {
+                        logger.debug("      UUID not found. Adding one...");
+                        ChannelTypeUID channelTypeUID = new ChannelTypeUID(BluetoothBindingConstants.BINDING_ID,
+                                BroadcasterBindingConstants.CHANNEL_TYPE_MANUFACTURER_RAW);
+                        Map<String, String> properties = new HashMap<>();
+                        properties.put(BroadcasterBindingConstants.PARAMETER_DATA_UUID, uuid);
+                        var channel = ChannelBuilder.create(channelUID).withType(channelTypeUID)
+                                .withProperties(properties).build();
+                        // changed = true;
+                        builder.withChannel(channel);
+                        updateThing(builder.build());
+                        logger.debug("      Channel added");
+                    } else {
+                        logger.debug("      Channel exists");
                     }
+                    // }
                     updateState(channelUID, new StringType(HexUtils.bytesToHex(data)));
                 }
             }
         }
 
+    }
+
+    private DecimalType getDecimalValue(byte[] data, int index, int length, float multiplicator) {
+        long value = 0;
+        if (length == 1) {
+            value = ByteBuffer.wrap(data).get(index);
+        } else if (length == 2) {
+            value = ByteBuffer.wrap(data).getShort(index);
+        } else if (length == 4) {
+            value = ByteBuffer.wrap(data).getInt(index);
+        } else if (length == 8) {
+            value = ByteBuffer.wrap(data).getLong(index);
+        }
+
+        if (multiplicator != 1.0f) {
+            return new DecimalType(value * multiplicator);
+        } else {
+            return new DecimalType(value);
+        }
+    }
+
+    private StringType getRawValue(byte[] data, int indexInt, int lengthInt) {
+        int indexTo = data.length;
+        if (lengthInt > 0) {
+            indexTo = indexInt + lengthInt;
+        }
+        return new StringType(HexUtils.bytesToHex(Arrays.copyOfRange(data, indexInt, indexTo)));
     }
 
     @Override

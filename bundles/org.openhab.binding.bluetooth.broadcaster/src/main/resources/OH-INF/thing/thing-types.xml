@@ -4,7 +4,7 @@
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-	<thing-type id="broadcaster" extensible="number,raw">        
+	<thing-type id="broadcaster" extensible="manufacturer-number,manufacturer-raw,service-number,service-raw">        
 		<supported-bridge-type-refs>
 			<bridge-type-ref id="roaming"/>
 			<bridge-type-ref id="bluegiga"/>
@@ -43,69 +43,94 @@
       <description>Advertising interval</description>
       <state readOnly="true"/>
    </channel-type>
-   <channel-type id="number">
+   <channel-type id="manufacturer-number">
 		<item-type>Number</item-type>
-		<label>Numeric Data</label>
-		<description>Numeric data</description>
+		<label>Manufacturer Numeric Data</label>
+		<description>Manufacturer numeric data</description>
 		<state readOnly="true"/>
 		<config-description>
-            <parameter name="broadcasterDataType" type="text" pattern="^(ManufacturerData)|(ServiceData)$" required="true">
-                <label>Broadcaster data type</label>
-                <description>Which data from the broadcaster should be taken.</description>
-                <options>
-                    <option value="ManufacturerData">Manufacturer data</option>
-                    <option value="ServiceData">Service data</option>
-                </options>
-            </parameter>             
-			<parameter name="uuid" type="text">
-				<label>Service UUID</label>
-				<description>Service UUID</description>
-			</parameter>
-			<parameter name="dataBeginIndex" type="integer">
+			<parameter name="dataBeginIndex" type="integer" min="0">
                 <label>Data begin</label>
-                <description>Data begin index</description>
+                <description>Data begin index in raw data byte array.</description>
                 <default>0</default> 
             </parameter>
-            <parameter name="dataLength" type="integer">
+            <parameter name="dataLength" type="integer" min="0" pattern="^[1,2,4,8]$">
                 <label>Data length</label>
-                <description>Data length</description>
+                <description>Data length. Only values 1, 2, 4, 8 are allowed (for datatypes byte, short, integer and long respectively).</description>
                 <default>2</default>
             </parameter>
             <parameter name="multiplicator" type="decimal">
                 <label>Multiplicator</label>
-                <description>Used for data conversion</description>
+                <description>Used for data conversion.</description>
                 <default>1</default>
             </parameter>     
 		</config-description>        
 	</channel-type>
-	<channel-type id="raw">
+	<channel-type id="manufacturer-raw">
 		<item-type>String</item-type>
-		<label>Bluetooth Raw Data</label>
-		<description>The raw data</description>
+		<label>RManufacturer aw Data</label>
+		<description>Manufacturer raw data</description>
       <state readOnly="true"/> 
         <config-description>
-            <parameter name="broadcasterDataType" type="text" pattern="^(ManufacturerData)|(ServiceData)$" required="true">
-                <label>Broadcaster data type</label>
-                <description>Which data from the broadcaster should be taken.</description>
-                <options>
-                    <option value="ManufacturerData">Manufacturer data</option>
-                    <option value="ServiceData">Service data</option>
-                </options>
-            </parameter>             
-            <parameter name="uuid" type="text">
-                <label>Service UUID</label>
-                <description>Service UUID</description>
-            </parameter>
-            <parameter name="dataBeginIndex" type="integer">
+            <parameter name="dataBeginIndex" type="integer" min="0">
                 <label>Data begin</label>
-                <description>Data begin index</description>
+                <description>Data begin index in raw data byte array.</description>
                 <default>0</default> 
             </parameter>
-            <parameter name="dataLength" type="integer">
+            <parameter name="dataLength" type="integer" min="0">
                 <label>Data length</label>
-                <description>Data length</description>
+                <description>Data length.</description>
                 <default>2</default>
             </parameter>            
         </config-description>             
-	</channel-type>   
+	</channel-type>
+   <channel-type id="service-number">
+        <item-type>Number</item-type>
+        <label>Service Numeric Data</label>
+        <description>Service numeric data</description>
+        <state readOnly="true"/>
+        <config-description>
+            <parameter name="uuid" type="text" required="true">
+                <label>Service UUID</label>
+                <description>Service UUID</description>
+            </parameter>
+            <parameter name="dataBeginIndex" type="integer" min="0" >
+                <label>Data begin</label>
+                <description>Data begin index in raw data byte array.</description>
+                <default>0</default> 
+            </parameter>
+            <parameter name="dataLength" type="integer" min="0" pattern="^[1,2,4,8]$">
+                <label>Data length</label>
+                <description>Data length. Only values 1, 2, 4, 8 are allowed (for datatypes byte, short, integer and long respectively).</description>
+                <default>2</default>
+            </parameter>
+            <parameter name="multiplicator" type="decimal">
+                <label>Multiplicator</label>
+                <description>Used for data conversion.</description>
+                <default>1</default>
+            </parameter>     
+        </config-description>        
+    </channel-type>
+    <channel-type id="service-raw">
+        <item-type>String</item-type>
+        <label>Service Raw Data</label>
+        <description>Service raw data</description>
+      <state readOnly="true"/> 
+        <config-description>
+            <parameter name="uuid" type="text" required="true">
+                <label>Service UUID</label>
+                <description>Service UUID</description>
+            </parameter>            
+            <parameter name="dataBeginIndex" type="integer" min="0">
+                <label>Data begin</label>
+                <description>Data begin index in raw data byte array.</description>
+                <default>0</default> 
+            </parameter>
+            <parameter name="dataLength" type="integer" min="0">
+                <label>Data length</label>
+                <description>Data length.</description>
+                <default>2</default>
+            </parameter>            
+        </config-description>             
+    </channel-type>    	   
 </thing:thing-descriptions>
