@@ -29,7 +29,7 @@ public class BroadcasterBindingConstants {
     public static final ThingTypeUID THING_TYPE_BROADCASTER = new ThingTypeUID(BluetoothBindingConstants.BINDING_ID,
             "broadcaster");
 
-    // List of all Channel ids
+    // List of Channel ids
     public static final String CHANNEL_TYPE_INTERVAL = "interval";
     public static final String CHANNEL_TYPE_MANUFACTURER_NUMBER = "manufacturer-number";
     public static final String CHANNEL_TYPE_MANUFACTURER_RAW = "manufacturer-raw";
@@ -37,15 +37,12 @@ public class BroadcasterBindingConstants {
     public static final String CHANNEL_TYPE_SERVICE_RAW = "service-raw";
 
     public static final String PARAMETER_DATA_UUID = "uuid";
-    public static final String PARAMETER_DATA_BEGIN_INDEX = "dataBeginIndex";
+    public static final String PARAMETER_DATA_BEGIN = "dataBegin";
     public static final String PARAMETER_DATA_LENGTH = "dataLength";
     public static final String PARAMETER_MULTIPLICATOR = "multiplicator";
     public static final String PARAMETER_MANUFACTURER_DATA = "ManufacturerData";
     public static final String PARAMETER_SERVICE_DATA = "ServiceData";
 
-    // List of all Property IDs
-    // public static final String PROPERTY_BINDING_VERSION = "bindingVersion";
+    // List of Property IDs
     public static final String PROPERTY_ADVERTISING_INTERVAL = "advertisingInterval";
-    // public static final String PROPERTY_SERVICE_UUID = "serviceUUID";
-
 }

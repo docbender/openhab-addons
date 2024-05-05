@@ -155,7 +155,7 @@ public class BroadcasterHandler extends BeaconBluetoothHandler {
                     // get channel properties
                     var properties = channel.getConfiguration().getProperties();
                     // retrieve properties values
-                    var index = properties.get(BroadcasterBindingConstants.PARAMETER_DATA_BEGIN_INDEX);
+                    var index = properties.get(BroadcasterBindingConstants.PARAMETER_DATA_BEGIN);
                     var datalength = properties.get(BroadcasterBindingConstants.PARAMETER_DATA_LENGTH);
                     var multiplicator = properties.get(BroadcasterBindingConstants.PARAMETER_MULTIPLICATOR);
                     int indexInt = (index == null) ? 0 : ((BigDecimal) index).intValue();
@@ -163,19 +163,19 @@ public class BroadcasterHandler extends BeaconBluetoothHandler {
                     float multiplicatorFloat = (multiplicator == null) ? 1.0f
                             : ((BigDecimal) multiplicator).floatValue();
                     // get data for number configured channel
-                    if (channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_SERVICE_NUMBER)) {
+                    if (channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_MANUFACTURER_NUMBER)) {
                         if (lengthInt != 1 && lengthInt != 2 && lengthInt != 4 && lengthInt != 8) {
-                            logger.warn("Channel {} has set unsupported data length to {}", channel.getUID().getId(),
+                            logger.warn("Channel '{}' has set unsupported data length to {}", channel.getUID().getId(),
                                     lengthInt);
                             continue;
                         }
                         DecimalType value = getDecimalValue(data, indexInt, lengthInt, multiplicatorFloat);
-                        logger.debug("      Channel {} updated by value {}", channel.getUID().getId(), value);
+                        logger.debug("      Channel '{}' updated by value {}", channel.getUID().getId(), value);
                         updateState(channel.getUID(), value);
                         // get raw data for configured channel
-                    } else if (channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_SERVICE_RAW)) {
+                    } else if (channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_MANUFACTURER_RAW)) {
                         StringType value = getRawValue(data, indexInt, lengthInt);
-                        logger.debug("      Channel {} updated by value {}", channel.getUID().getId(), value);
+                        logger.debug("      Channel '{}' updated by value {}", channel.getUID().getId(), value);
                         updateState(channel.getUID(), value);
                     }
                 }
@@ -228,7 +228,7 @@ public class BroadcasterHandler extends BeaconBluetoothHandler {
                         continue;
                     }
                     // retrieve rest of properties
-                    var index = properties.get(BroadcasterBindingConstants.PARAMETER_DATA_BEGIN_INDEX);
+                    var index = properties.get(BroadcasterBindingConstants.PARAMETER_DATA_BEGIN);
                     var datalength = properties.get(BroadcasterBindingConstants.PARAMETER_DATA_LENGTH);
                     var multiplicator = properties.get(BroadcasterBindingConstants.PARAMETER_MULTIPLICATOR);
                     int indexInt = (index == null) ? 0 : ((BigDecimal) index).intValue();
@@ -238,17 +238,17 @@ public class BroadcasterHandler extends BeaconBluetoothHandler {
                     // get data for number configured channel
                     if (channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_SERVICE_NUMBER)) {
                         if (lengthInt != 1 && lengthInt != 2 && lengthInt != 4 && lengthInt != 8) {
-                            logger.warn("Channel {} has set unsupported data length to {}", channel.getUID().getId(),
+                            logger.warn("Channel '{}' has set unsupported data length to {}", channel.getUID().getId(),
                                     lengthInt);
                             continue;
                         }
                         DecimalType value = getDecimalValue(data, indexInt, lengthInt, multiplicatorFloat);
-                        logger.debug("      Channel {} updated by value {}", channel.getUID().getId(), value);
+                        logger.debug("      Channel '{}' updated by value {}", channel.getUID().getId(), value);
                         updateState(channel.getUID(), value);
                         // get raw data for configured channel
                     } else if (channelType.getId().equals(BroadcasterBindingConstants.CHANNEL_TYPE_SERVICE_RAW)) {
                         StringType value = getRawValue(data, indexInt, lengthInt);
-                        logger.debug("      Channel {} updated by value {}", channel.getUID().getId(), value);
+                        logger.debug("      Channel '{}' updated by value {}", channel.getUID().getId(), value);
                         updateState(channel.getUID(), value);
                     }
                 }
@@ -286,7 +286,6 @@ public class BroadcasterHandler extends BeaconBluetoothHandler {
                 }
             }
         }
-
     }
 
     private DecimalType getDecimalValue(byte[] data, int index, int length, float multiplicator) {
